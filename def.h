@@ -38,6 +38,11 @@ extern pthread_mutex_t root_dir_mutex;
 struct inode {
     char block[NUM_POINTERS]; //(direct) pointers to data blocks; note: value<0 means the block is not used
     int length; //length of the file of the inode
+    // advanced readers-writers state (per-inode)
+    int num_readers;          //number of threads currently reading this file
+    int is_writing;           //1 if a writer currently has this file open, 0 otherwise
+    pthread_mutex_t rw_mutex; //protects num_readers and is_writing
+    pthread_cond_t rw_cond;   //threads wait here when access is not yet permitted
 };
 extern struct inode inodes[NUM_INODES]; //global array of inodes
 extern pthread_mutex_t inodes_mutex; //mutex to guard mutually-exclusive access of inodes
